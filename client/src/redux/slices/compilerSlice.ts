@@ -23,8 +23,95 @@ const initialState: CompilerSliceStateType = {
     <script src="script.js"></script>
   </body>
 </html>`,
-        css:"This is css code",
-        javascript:"This is javascript code",
+        css:`body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  text-align: center;
+}
+
+.container {
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #333;
+}
+
+input[type="text"] {
+  width: 70%;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+
+.deleteBtn {
+  float: right;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 3px 8px;
+}
+
+.deleteBtn:hover {
+  background-color: #c82333;
+}`,
+        javascript:`document.addEventListener('DOMContentLoaded', function() {
+  const taskInput = document.getElementById('taskInput');
+  const addBtn = document.getElementById('addBtn');
+  const taskList = document.getElementById('taskList');
+
+  addBtn.addEventListener('click', function() {
+    const taskText = taskInput.value.trim();
+    if (taskText !== '') {
+      const li = document.createElement('li');
+      li.textContent = taskText;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.className = 'deleteBtn';
+      deleteBtn.addEventListener('click', function() {
+        li.remove();
+      });
+
+      li.appendChild(deleteBtn);
+      taskList.appendChild(li);
+      taskInput.value = '';
+    } else {
+      alert('Please enter a task.');
+    }
+  });
+});`,
     },
     currentLanguage:"html"
 }
@@ -39,9 +126,12 @@ const compilerSlice = createSlice({
         updateCodeValue: (state,action: PayloadAction<string>) =>{
             state.fullCode[state.currentLanguage] = action.payload
         },
+        updateFullCode: (state, action: PayloadAction<CompilerSliceStateType["fullCode"]>) =>{
+            state.fullCode = action.payload
+        }
         
     },
 })
 
 export default compilerSlice.reducer
-export const {updateCurrantLanguage,updateCodeValue} = compilerSlice.actions
+export const {updateCurrantLanguage,updateCodeValue,updateFullCode} = compilerSlice.actions
