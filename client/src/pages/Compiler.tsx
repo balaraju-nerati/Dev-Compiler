@@ -9,34 +9,38 @@ import {
 import { handleError } from "@/utils/handleError";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import { useDispatch } from "react-redux";
 import { updateFullCode } from "@/redux/slices/compilerSlice";
-import { toast } from "sonner";
+import { useLoadCodeMutation } from "@/redux/slices/api";
+import Loader from "@/components/Loader/Loader";
 
 export default function Compiler() {
-  const {urlId} = useParams()
-  const dispatch = useDispatch()
-  const loadCode = async () =>{
+  const { urlId } = useParams();
+  const [loadExistingCode, { isLoading }] = useLoadCodeMutation();
+  const dispatch = useDispatch();
+  const loadCode = async () => {
     try {
-      const response = await axios.post("http://localhost:3000/compiler/load",{
-        urlId: urlId
-      });
-      dispatch(updateFullCode(response.data.fullCode))
-    } catch (error) {
-      if(axios.isAxiosError(error)){
-        if(error?.response?.status === 500){
-          toast("Invalid URL, Default Code Loaded")
-        }
+      if (urlId) {
+        const response = await loadExistingCode({ urlId }).unwrap();
+        dispatch(updateFullCode(response.fullCode));
       }
-      handleError(error)
+    } catch (error) {
+      handleError(error);
     }
-  }
-  useEffect(() =>{
-    if(urlId){
+  };
+  useEffect(() => {
+    if (urlId) {
       loadCode();
     }
-  },[urlId]);
+  }, [urlId]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-[calc(100dvh-60px)] flex justify-center items-center">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -53,7 +57,7 @@ export default function Compiler() {
           defaultSize={50}
           className="h-[calc(100dvh-60px)] min-w-[350px]"
         >
-          <RenderCode/>
+          <RenderCode />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

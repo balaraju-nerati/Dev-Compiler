@@ -23,13 +23,12 @@ import {
 } from "@/redux/slices/compilerSlice";
 import { RootState } from "@/redux/store";
 import { handleError } from "@/utils/handleError";
-import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useSaveCodeMutation } from "@/redux/slices/api";
 
 export default function HelperHeader() {
-  const [saveLoading, setSaveLoading] = useState<boolean>(false);
   const [shareBtn, setShareBtn] = useState<boolean>(false);
 
   const navigate = useNavigate();
@@ -37,6 +36,8 @@ export default function HelperHeader() {
   const fullCode = useSelector(
     (state: RootState) => state.compilerSlice.fullCode
   );
+
+  const [saveCode, { isLoading }] = useSaveCodeMutation();
 
   const { urlId } = useParams();
   useEffect(() => {
@@ -48,17 +49,12 @@ export default function HelperHeader() {
   }, [urlId]);
 
   const handleSaveCode = async () => {
-    setSaveLoading(true);
     try {
-      const response = await axios.post("http://localhost:3000/compiler/save", {
-        fullCode: fullCode,
-      });
-      navigate(`/compiler/${response.data.url}`, { replace: true });
+      const response = await saveCode(fullCode).unwrap();
+      navigate(`/compiler/${response.url}`, { replace: true });
     } catch (error) {
       handleError(error);
-    } finally {
-      setSaveLoading(false);
-    }
+    } 
   };
 
   const dispatch = useDispatch();
@@ -73,9 +69,9 @@ export default function HelperHeader() {
           variant="success"
           className="flex justify-center items-center gap-1"
           onClick={handleSaveCode}
-          disabled={saveLoading}
+          disabled={isLoading}
         >
-          {saveLoading ? (
+          {isLoading ? (
             <>
               <Loader2 className=" animate-spin" /> Saving
             </>
@@ -87,8 +83,10 @@ export default function HelperHeader() {
         </Button>
         {shareBtn && (
           <Dialog>
-            <DialogTrigger className="flex gap-1 justify-center items-center bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 h-9 px-4 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-              <Share2 size={16} /> Share
+            <DialogTrigger asChild>
+              <Button variant="secondary">
+                <Share2 size={16} /> Share
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader className="flex flex-col justify-between gap-4">
@@ -116,9 +114,9 @@ export default function HelperHeader() {
                       <Copy size={14} />
                     </Button>
                   </div>
-                  <p className="text-center">
+                  <div className="text-center">
                     Share this URL with your friends to collaborate.
-                  </p>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
             </DialogContent>

@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { User } from "../models/User";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { AuthRequest } from "../middlewares/verifyToken";
 
 export const signup = async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
@@ -12,8 +13,10 @@ export const signup = async (req: Request, res: Response) => {
     if (existingUser) {
       return res.status(400).send({ message: "User already exists" });
     }
-    if(!usernameRegex.test(username)){
-        return res.status(400).send({message: "Username contains invalid Characters"})
+    if (!usernameRegex.test(username)) {
+      return res
+        .status(400)
+        .send({ message: "Username contains invalid Characters" });
     }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -29,15 +32,15 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-  const { userId, password }:{userId: string, password: string} = req.body;
+  const { userId, password }: { userId: string; password: string } = req.body;
   try {
     let existingUser = undefined;
-    if(userId.includes("@")){
-        existingUser = await User.findOne({ email: userId });
-    }else{
-        existingUser = await User.findOne({ username: userId });
+    if (userId.includes("@")) {
+      existingUser = await User.findOne({ email: userId });
+    } else {
+      existingUser = await User.findOne({ username: userId });
     }
-    
+
     if (!existingUser) {
       return res.status(400).send({ message: "User not found" });
     }
@@ -67,7 +70,14 @@ export const login = async (req: Request, res: Response) => {
       sameSite: "lax",
     });
 
-    return res.status(200).send({ existingUser });
+    return res
+      .status(200)
+      .send({
+        username: existingUser.username,
+        picture: existingUser.picture,
+        email: existingUser.email,
+        savedCodes: existingUser.savedCodes,
+      });
   } catch (error) {
     return res.status(500).send({ messaga: "Error Log in!", error: error });
   }
@@ -83,3 +93,22 @@ export const logout = async (req: Request, res: Response) => {
       .send({ messaga: "Error Logging out!", error: error });
   }
 };
+
+
+export const userDetails = async (req: AuthRequest, res: Response) =>{
+  const userId = req._id;
+  try {
+    const user = await User.findById(userId)
+    if(!user) {
+      return res.status(404).send({ message: "Cannot find the user!"})
+    }
+    return res.status(200).send({
+      username: user.username,
+      picture: user.picture,
+      email: user.email,
+      savedCodes: user.savedCodes,
+    })
+  } catch (error) {
+    return res.status(500).send({ message: "Cannot fetch user details"})
+  }
+}
