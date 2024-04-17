@@ -25,7 +25,30 @@ export const signup = async (req: Request, res: Response) => {
       password: hashedPassword,
       username: username,
     });
-    return res.status(201).send({ user });
+
+    const jwtToken = jwt.sign(
+      {
+        _id: user._id,
+        email: user.email,
+      },
+      process.env.JWT_KEY!,
+      {
+        expiresIn: "1d",
+      }
+    );
+    res.cookie("token", jwtToken, {
+      path: "/",
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      httpOnly: true,
+      sameSite: "lax",
+    });
+
+    return res.status(201).send({
+      username: user.username,
+      picture: user.picture,
+      email: user.email,
+      savedCodes: user.savedCodes,
+    });
   } catch (error) {
     return res.status(500).send({ messaga: "Error signing up!", error: error });
   }
@@ -70,14 +93,12 @@ export const login = async (req: Request, res: Response) => {
       sameSite: "lax",
     });
 
-    return res
-      .status(200)
-      .send({
-        username: existingUser.username,
-        picture: existingUser.picture,
-        email: existingUser.email,
-        savedCodes: existingUser.savedCodes,
-      });
+    return res.status(200).send({
+      username: existingUser.username,
+      picture: existingUser.picture,
+      email: existingUser.email,
+      savedCodes: existingUser.savedCodes,
+    });
   } catch (error) {
     return res.status(500).send({ messaga: "Error Log in!", error: error });
   }
@@ -94,21 +115,20 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
-
-export const userDetails = async (req: AuthRequest, res: Response) =>{
+export const userDetails = async (req: AuthRequest, res: Response) => {
   const userId = req._id;
   try {
-    const user = await User.findById(userId)
-    if(!user) {
-      return res.status(404).send({ message: "Cannot find the user!"})
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send({ message: "Cannot find the user!" });
     }
     return res.status(200).send({
       username: user.username,
       picture: user.picture,
       email: user.email,
       savedCodes: user.savedCodes,
-    })
+    });
   } catch (error) {
-    return res.status(500).send({ message: "Cannot fetch user details"})
+    return res.status(500).send({ message: "Cannot fetch user details" });
   }
-}
+};

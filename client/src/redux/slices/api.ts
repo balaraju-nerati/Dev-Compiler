@@ -28,21 +28,37 @@ export const api = createApi({
       }),
     }),
     login: builder.mutation<userInfoType, loginCredentialsType>({
-      query: (body)=>({
+      query: (body) => ({
         url: "/user/login",
         method: "POST",
         body: body,
         credentials: "include",
-      })
+      }),
+    }),
+    signup: builder.mutation<userInfoType, signupCredentialsType>({
+      query: (body) => ({
+        url: "/user/signup",
+        method: "POST",
+        body: body,
+      }),
     }),
     logout: builder.mutation<void, void>({
-      query: ()=>({
+      query: () => ({
         url: "/user/logout",
         method: "POST",
       }),
     }),
-
+    getUserDetails: builder.query<userInfoType, void>({
+      query: () => ({ url: "/user/user-details", cache: "no-store" }),
+    }),
   }),
 });
 
-export const { useSaveCodeMutation, useLoadCodeMutation, useLoginMutation, useLogoutMutation } = api;
+export const {
+  useSaveCodeMutation,
+  useLoadCodeMutation,
+  useLoginMutation,
+  useLogoutMutation,
+  useGetUserDetailsQuery,
+  useSignupMutation
+} = api;
