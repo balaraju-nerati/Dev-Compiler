@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -10,17 +10,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 export default function Header() {
   const [logout, { isLoading }] = useLogoutMutation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isLoggedIn = useSelector(
     (state: RootState) => state.appSlice.isLoggedIn
   );
 
-  const currentUser = useSelector((state: RootState) => state.appSlice.currentUser)
+  const currentUser = useSelector(
+    (state: RootState) => state.appSlice.currentUser
+  );
 
   async function handleLogout() {
     try {
       await logout().unwrap();
       dispatch(updateIsLoggedIn(false));
       dispatch(updateCurrentUser({}));
+      navigate("/")
     } catch (error) {
       handleError(error);
     }
@@ -31,13 +35,18 @@ export default function Header() {
         <h2 className=" font-bold select-none">Dev-Compiler</h2>
       </Link>
       <ul className=" flex gap-2">
-        <li>
-          <Link to="/compiler">
-            <Button variant="secondary">Compiler</Button>
-          </Link>
-        </li>
         {isLoggedIn ? (
           <>
+            <li>
+              <Link to="/compiler">
+                <Button variant="link">Compiler</Button>
+              </Link>
+            </li>
+            <li>
+              <Link to="/my-codes">
+                <Button variant="blue">My Codes</Button>
+              </Link>
+            </li>
             <li>
               <Button
                 loading={isLoading}
@@ -51,7 +60,7 @@ export default function Header() {
               <Avatar>
                 <AvatarImage src={currentUser.picture} />
                 <AvatarFallback className=" capitalize">
-                    {currentUser.username?.slice(0, 2)}
+                  {currentUser.username?.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
             </li>

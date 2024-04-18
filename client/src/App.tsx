@@ -20,8 +20,6 @@ function App() {
       dispatch(updateCurrentUser({}));
       dispatch(updateIsLoggedIn(false));
     }
-    console.log(" data:", data)
-    console.log(" error:", error)
   },[data, error])
 
 

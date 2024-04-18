@@ -32,7 +32,7 @@ const UserSchema = new mongoose.Schema<IUserSchema>(
       default:
         "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg",
     },
-    savedCodes: [{ type: mongoose.Schema.Types.ObjectId }]
+    savedCodes: [{ type: mongoose.Schema.Types.ObjectId, ref:"Code" }]
   },
   { timestamps: true }
 );

@@ -7,6 +7,7 @@ export interface CompilerSliceStateType {
         javascript: string;
     }
     currentLanguage: "html" | "css" | "javascript";
+    isOwner: boolean;
     
 }
 
@@ -113,7 +114,8 @@ li {
   });
 });`,
     },
-    currentLanguage:"html"
+    currentLanguage:"html",
+    isOwner: false
 }
 
 const compilerSlice = createSlice({
@@ -128,10 +130,13 @@ const compilerSlice = createSlice({
         },
         updateFullCode: (state, action: PayloadAction<CompilerSliceStateType["fullCode"]>) =>{
             state.fullCode = action.payload
-        }
+        },
+        updateIsOwner: (state, action: PayloadAction<boolean>) => {
+          state.isOwner = action.payload;
+        },
         
     },
 })
 
 export default compilerSlice.reducer
-export const {updateCurrantLanguage,updateCodeValue,updateFullCode} = compilerSlice.actions
+export const {updateCurrantLanguage,updateCodeValue,updateFullCode,updateIsOwner} = compilerSlice.actions

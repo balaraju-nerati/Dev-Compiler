@@ -1,31 +1,124 @@
 import { Request, Response } from "express";
-import { Code } from "../models/Code"
-import { fullCodeType } from "../types/compilerTypes"
+import { Code } from "../models/Code";
+import { fullCodeType } from "../types/compilerTypes";
+import { User } from "../models/User";
+import { AuthRequest } from "../middlewares/verifyToken";
 
-export const saveCode = async (req: Request, res: Response) => {
-    const fullCode:fullCodeType = req.body
-    if(!fullCode.html && !fullCode.css && !fullCode.javascript){
-        return res.status(400).send({ message: "Code cannot be blank!"})
+export const saveCode = async (req: AuthRequest, res: Response) => {
+  const { fullCode, title }: { fullCode: fullCodeType; title: string } =
+    req.body;
+  let ownerName = "Anonymous";
+  let ownerInfo = undefined;
+  let user = undefined;
+  let isAuthenticated = false;
+  if (req._id) {
+    user = await User.findById(req._id);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
     }
-    try {
-        const newCode = await Code.create({
-            fullCode: fullCode
-        })
-        return res.status(201).send({url:newCode._id, status: "saved!"});
-    } catch (error) {
-        return res.status(500).send({ message: "Error saving code", error })
-    }
-}
+    ownerName = user?.username;
+    ownerInfo = user._id;
+    isAuthenticated = true;
+  }
 
-export const loadCode = async (req: Request, res: Response) =>{
-    const { urlId } = req.body
-    try {
-        const existingCode = await Code.findById(urlId);
-        if(!existingCode){
-            return res.status(400).send({message:"code not found"});
-        }
-        return res.status(200).send({ fullCode: existingCode.fullCode})
-    } catch (error) {
-        return res.status(500).send({message: "Error loading code", error})
+  if (!fullCode.html && !fullCode.css && !fullCode.javascript) {
+    return res.status(400).send({ message: "Code cannot be blank!" });
+  }
+  try {
+    const newCode = await Code.create({
+      fullCode: fullCode,
+      ownerName: ownerName,
+      ownerInfo: ownerInfo,
+      title: title,
+    });
+    if (isAuthenticated && user) {
+      await User.updateOne(
+        {_id: user._id},
+        { $push: { savedCodes: newCode._id}}
+      )
     }
-}
+    return res.status(201).send({ url: newCode._id, status: "saved!" });
+  } catch (error) {
+    return res.status(500).send({ message: "Error saving code", error });
+  }
+};
+
+export const loadCode = async (req: AuthRequest, res: Response) => {
+  // const { urlId } = req.body;
+  // try {
+  //   const existingCode = await Code.findById(urlId);
+  //   if (!existingCode) {
+  //     return res.status(400).send({ message: "code not found" });
+  //   }
+  //   return res.status(200).send({ fullCode: existingCode.fullCode });
+  // } catch (error) {
+  //   return res.status(500).send({ message: "Error loading code", error });
+  // }
+  const { urlId } = req.body;
+  const userId = req._id;
+  let isOwner = false;
+  try {
+    const existingCode = await Code.findById(urlId);
+    if (!existingCode) {
+      return res.status(404).send({ message: "Code not found" });
+    }
+    const user = await User.findById(userId);
+    if (user?.username === existingCode.ownerName) {
+      isOwner = true;
+    }
+    return res.status(200).send({ fullCode: existingCode.fullCode, isOwner });
+  } catch (error) {
+    return res.status(500).send({ message: "Error loading code", error });
+  }
+};
+
+export const getMyCodes = async (req: AuthRequest, res: Response) => {
+  const userId = req._id;
+  try {
+    const user = await User.findById(userId).populate({
+      path: "savedCodes",
+      options: { sort: { createdAt: -1 } },
+    });
+
+    if (!user) {
+      return res.status(404).send({ message: "Cannot find User!" });
+    }
+    return res.status(200).send(user.savedCodes);
+  } catch (error) {
+    return res.status(500).send({ message: "Error loading my codes!", error });
+  }
+};
+
+export const deleteCode = async (req: AuthRequest, res: Response) => {
+  const userId = req._id;
+  const { id } = req.params;
+  try {
+    const owner = await User.findById(userId);
+    if (!owner) {
+      return res
+        .status(404)
+        .send({ message: "Cannot find the owner profile!" });
+    }
+    const existingCode = await Code.findById(id);
+    if (!existingCode) {
+      return res.status(404).send({ message: "Code not found" });
+    }
+    if (existingCode.ownerName !== owner.username) {
+      return res
+        .status(400)
+        .send({ message: "You don't have permission to delete this code!" });
+    }
+    const deleteCode = await Code.findByIdAndDelete(id);
+    if (deleteCode) {
+      await User.updateOne(
+        {_id: userId},
+        { $pull: { savedCodes: id}},
+      )
+      return res.status(200).send({ message: "Code Deleted successfully!" });
+    } else {
+      return res.status(404).send({ message: "Code not found" });
+    }
+  } catch (error) {
+    return res.status(500).send({ message: "Error deleting code!", error });
+  }
+};

@@ -6,19 +6,25 @@ export const api = createApi({
     baseUrl: "http://localhost:3000",
     credentials: "include",
   }),
+  tagTypes: ["myCodes"],
   endpoints: (builder) => ({
+
     saveCode: builder.mutation<
       { url: string; status: string },
-      CompilerSliceStateType["fullCode"]
+      codeType["fullCode"]
     >({
-      query: (fullCode) => ({
-        url: "/compiler/save",
-        method: "POST",
-        body: fullCode,
-      }),
+      query: (fullCode) => {
+        return {
+          url: "/compiler/save",
+          method: "POST",
+          body: fullCode,
+        };
+      },
+      invalidatesTags: ["myCodes"],
     }),
+
     loadCode: builder.mutation<
-      { fullCode: CompilerSliceStateType["fullCode"] },
+      { fullCode: CompilerSliceStateType["fullCode"]; isOwner: boolean },
       { urlId: string }
     >({
       query: (body) => ({
@@ -27,6 +33,7 @@ export const api = createApi({
         body: body,
       }),
     }),
+
     login: builder.mutation<userInfoType, loginCredentialsType>({
       query: (body) => ({
         url: "/user/login",
@@ -35,6 +42,12 @@ export const api = createApi({
         credentials: "include",
       }),
     }),
+
+    getMyCodes: builder.query<Array<codeType>, void>({
+      query: () => "/user/my-codes",
+      providesTags: ["myCodes"],
+    }),
+
     signup: builder.mutation<userInfoType, signupCredentialsType>({
       query: (body) => ({
         url: "/user/signup",
@@ -42,15 +55,26 @@ export const api = createApi({
         body: body,
       }),
     }),
+
     logout: builder.mutation<void, void>({
       query: () => ({
         url: "/user/logout",
         method: "POST",
       }),
     }),
+
     getUserDetails: builder.query<userInfoType, void>({
       query: () => ({ url: "/user/user-details", cache: "no-store" }),
     }),
+    
+    deleteCode: builder.mutation<void, string>({
+      query: (_id) => ({
+        url: `/compiler/delete/${_id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["myCodes"],
+    }),
+    
   }),
 });
 
@@ -60,5 +84,7 @@ export const {
   useLoginMutation,
   useLogoutMutation,
   useGetUserDetailsQuery,
-  useSignupMutation
+  useSignupMutation,
+  useGetMyCodesQuery,
+  useDeleteCodeMutation
 } = api;

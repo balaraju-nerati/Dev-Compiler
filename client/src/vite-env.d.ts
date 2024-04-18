@@ -18,3 +18,9 @@ interface signupCredentialsType {
   email: string;
   password: string;
 }
+
+interface codeType {
+  fullCode?: CompilerSliceStateType["fullCode"];
+  title: string;
+  _id?: string;
+}

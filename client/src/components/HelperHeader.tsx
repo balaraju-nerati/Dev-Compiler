@@ -1,4 +1,4 @@
-import { Code, Copy, Loader2, Save, Share2 } from "lucide-react";
+import { Code, Copy, Download, Loader2, Save, Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Select,
@@ -27,9 +27,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useSaveCodeMutation } from "@/redux/slices/api";
+import { Input } from "./ui/input";
 
 export default function HelperHeader() {
   const [shareBtn, setShareBtn] = useState<boolean>(false);
+  const [postTitle, setPostTitle] = useState<string>("My Code");
 
   const navigate = useNavigate();
 
@@ -38,6 +40,54 @@ export default function HelperHeader() {
   );
 
   const [saveCode, { isLoading }] = useSaveCodeMutation();
+
+  const handleDownloadCode = () => {
+    if (
+      fullCode.html === "" &&
+      fullCode.css === "" &&
+      fullCode.javascript === ""
+    ) {
+      toast("Error: Code is empty");
+    } else {
+      const htmlCode = new Blob([fullCode.html], { type: "text/html" });
+      const cssCode = new Blob([fullCode.css], { type: "text/css" });
+      const javascriptCode = new Blob([fullCode.javascript], {
+        type: "text/javascript",
+      });
+
+      const htmlLink = document.createElement("a");
+      const cssLink = document.createElement("a");
+      const javascriptLink = document.createElement("a");
+
+      htmlLink.href = URL.createObjectURL(htmlCode);
+      htmlLink.download = "index.html";
+      document.body.appendChild(htmlLink);
+
+      cssLink.href = URL.createObjectURL(cssCode);
+      cssLink.download = "style.css";
+      document.body.appendChild(cssLink);
+
+      javascriptLink.href = URL.createObjectURL(javascriptCode);
+      javascriptLink.download = "script.js";
+      document.body.appendChild(javascriptLink);
+
+      if (fullCode.html !== "") {
+        htmlLink.click();
+      }
+      if (fullCode.css !== "") {
+        cssLink.click();
+      }
+      if (fullCode.javascript !== "") {
+        javascriptLink.click();
+      }
+
+      document.body.removeChild(htmlLink);
+      document.body.removeChild(cssLink);
+      document.body.removeChild(javascriptLink);
+
+      toast("Code Downloaded successfully");
+    }
+  };
 
   const { urlId } = useParams();
   useEffect(() => {
@@ -49,12 +99,15 @@ export default function HelperHeader() {
   }, [urlId]);
 
   const handleSaveCode = async () => {
+    const body = { fullCode: fullCode, title: postTitle };
     try {
-      const response = await saveCode(fullCode).unwrap();
+      const response = await saveCode(body).unwrap();
       navigate(`/compiler/${response.url}`, { replace: true });
+      toast("Code successfully saved.")
     } catch (error) {
       handleError(error);
-    } 
+      toast("Error while saving the code")
+    }
   };
 
   const dispatch = useDispatch();
@@ -65,7 +118,40 @@ export default function HelperHeader() {
   return (
     <div className="_helper_header h-[50px] bg-black text-white p-2 flex justify-between items-center">
       <div className="_btn_container flex gap-3">
-        <Button
+      <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="success" loading={isLoading}>
+              <Save size={16} /> Save
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex gap-1 justify-center items-center">
+                <Code />
+                Save your Code!
+              </DialogTitle>
+              <div className="__url flex justify-center items-center gap-1">
+                <Input
+                  className="bg-slate-700 focus-visible:ring-0"
+                  placeholder="Type your Post title"
+                  value={postTitle}
+                  onChange={(e) => setPostTitle(e.target.value)}
+                />
+                <Button
+                  variant="success"
+                  className="h-full"
+                  onClick={handleSaveCode}
+                >
+                  Save
+                </Button>
+              </div>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+        <Button onClick={handleDownloadCode} size="icon" variant="blue">
+          <Download size={16} />
+        </Button>
+        {/* <Button
           variant="success"
           className="flex justify-center items-center gap-1"
           onClick={handleSaveCode}
@@ -81,6 +167,9 @@ export default function HelperHeader() {
             </>
           )}
         </Button>
+        <Button onClick={handleDownloadCode} size="icon" variant="blue">
+          <Download size={16} />
+        </Button> */}
         {shareBtn && (
           <Dialog>
             <DialogTrigger asChild>

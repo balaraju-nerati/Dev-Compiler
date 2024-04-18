@@ -28,7 +28,6 @@ export default function Signup() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
