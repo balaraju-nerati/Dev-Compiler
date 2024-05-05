@@ -1,5 +1,4 @@
 # DEV-COMPILER 
-----
 Dev-compiler is a web developement compiler where you can use HTML,CSS and Javascript to build some basic projects. It is build using MERN stack (TypeScript) along with Redux for the state management tool and Tailwind for the UI
 ### Features 
 - User authentication.
