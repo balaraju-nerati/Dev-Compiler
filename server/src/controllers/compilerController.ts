@@ -89,6 +89,33 @@ export const getMyCodes = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const editCode = async (req: AuthRequest, res: Response) => {
+  const userId = req._id;
+  const postId = req.params.id;
+  const fullCode = req.body;
+  try {
+    const owner = await User.findById(userId);
+    if (!owner) {
+      return res.status(404).send({ message: "cannot find owner!" });
+    }
+    const existingPost = await Code.findById(postId);
+    if (!existingPost) {
+      return res.status(404).send({ message: "Cannot find post to edit!" });
+    }
+    if (existingPost.ownerName !== owner.username) {
+      return res
+        .status(400)
+        .send({ message: "You don't have permission to edit this post!" });
+    }
+    await Code.findByIdAndUpdate(postId, {
+      fullCode: fullCode,
+    });
+    return res.status(200).send({ message: "Post updated successfully" });
+  } catch (error) {
+    return res.status(500).send({ message: "Error editing code!", error });
+  }
+};
+
 export const deleteCode = async (req: AuthRequest, res: Response) => {
   const userId = req._id;
   const { id } = req.params;
