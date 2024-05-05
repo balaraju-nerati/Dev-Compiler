@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { useLoginMutation } from "@/redux/slices/api";
 import { handleError } from "@/utils/handleError";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { updateCurrentUser, updateIsLoggedIn } from "@/redux/slices/appSlice";
 
 const formSchema = z.object({
@@ -27,6 +27,13 @@ export default function Login() {
   const [login, { isLoading }] = useLoginMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isLoggedIn = useSelector(
+    (state: RootState) => state.appSlice.isLoggedIn
+  );
+
+  if(isLoggedIn === true){
+    navigate("/")
+  }
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

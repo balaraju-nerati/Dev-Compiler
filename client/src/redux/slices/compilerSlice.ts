@@ -13,7 +13,8 @@ export interface CompilerSliceStateType {
 
 const initialState: CompilerSliceStateType = {
     fullCode: {
-        html:`<html lang="en">
+        html:`<!-- This is just a starting code. You can modify based upon your need -->
+<html lang="en">
   <body>
     <div class="container">
       <h1>Todo List</h1>

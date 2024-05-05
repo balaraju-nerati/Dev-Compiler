@@ -1,9 +1,22 @@
 import CodeItem from "@/components/CodeItem";
 import { useGetMyCodesQuery } from "@/redux/slices/api";
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function MyCodes() {
   const { data: myCodes } = useGetMyCodesQuery();
+  const navigate = useNavigate();
+  const isLoggedIn = useSelector(
+    (state: RootState) => state.appSlice.isLoggedIn
+  );
+
+  useEffect(()=>{
+    if(isLoggedIn === false){
+      navigate("/")
+    }
+  })
+
 
   return myCodes?.length !== 0 ? (
     <div className="p-3 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">

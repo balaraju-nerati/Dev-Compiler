@@ -8,13 +8,24 @@ import {
 } from "@/components/ui/resizable";
 import { handleError } from "@/utils/handleError";
 import { useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import {  useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { updateFullCode } from "@/redux/slices/compilerSlice";
 import { useLoadCodeMutation } from "@/redux/slices/api";
 import Loader from "@/components/Loader/Loader";
 
 export default function Compiler() {
+  const navigate = useNavigate();
+  const isLoggedIn = useSelector(
+    (state: RootState) => state.appSlice.isLoggedIn
+  );
+
+  useEffect(()=>{
+    if(isLoggedIn === false){
+      navigate("/")
+    }
+  })
+
   const { urlId } = useParams();
   const [loadExistingCode, { isLoading }] = useLoadCodeMutation();
   const dispatch = useDispatch();

@@ -8,7 +8,6 @@ export const api = createApi({
   }),
   tagTypes: ["myCodes"],
   endpoints: (builder) => ({
-
     saveCode: builder.mutation<
       { url: string; status: string },
       codeType["fullCode"]
@@ -66,7 +65,20 @@ export const api = createApi({
     getUserDetails: builder.query<userInfoType, void>({
       query: () => ({ url: "/user/user-details", cache: "no-store" }),
     }),
-    
+
+    editCode: builder.mutation<
+      void,
+      { fullCode: CompilerSliceStateType["fullCode"]; id: string }
+    >({
+      query: ({ fullCode, id }) => {
+        return {
+          url: `/compiler/edit/${id}`,
+          method: "PUT",
+          body: fullCode,
+        };
+      },
+    }),
+
     deleteCode: builder.mutation<void, string>({
       query: (_id) => ({
         url: `/compiler/delete/${_id}`,
@@ -74,7 +86,6 @@ export const api = createApi({
       }),
       invalidatesTags: ["myCodes"],
     }),
-    
   }),
 });
 
@@ -86,5 +97,6 @@ export const {
   useGetUserDetailsQuery,
   useSignupMutation,
   useGetMyCodesQuery,
-  useDeleteCodeMutation
+  useEditCodeMutation,
+  useDeleteCodeMutation,
 } = api;
